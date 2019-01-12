@@ -54,3 +54,17 @@ def preprocess(reviews, labels):
         reviews_ints.append([vocab_to_int[word] for word in review.split()])
 
     print ('[INFO] Unique words in the vocab: {}'.format(len(vocab_to_int)))
+
+    # Encoding the labels
+    encoded_labels = [1 if label == 'positive' else 0 for label in labels.split('\n')]
+
+    # Remove outliers
+    # Removing 0 length reviews
+    # Getting the idxs for non 0 length reviews
+    non_zero_idx = [ii for ii, review in enumerate(reviews_ints) if len(review) != 0]
+    # Removing 0 length reviews
+    reviews_ints = [reviews_ints[ii] for ii in non_zero_idx]
+    encoded_labels = [encoded_labels[ii] for ii in non_zero_idx]
+
+    print ('[INFO]Number of reviews left after removing 0 length reviews {}'.format(len(non_zero_idx)))
+    
