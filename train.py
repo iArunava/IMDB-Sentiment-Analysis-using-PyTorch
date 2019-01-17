@@ -1,5 +1,6 @@
 from string import punctuation
 from collections import Counter
+from torch.utils.data import TensorDataset, DataLoader
 
 def train(FLAGS):
     # download the files if needed
@@ -40,6 +41,16 @@ def train(FLAGS):
     test_x, test_y = features[va_idx : ], np.array(encoded_labels[va_idx : ])
 
     # Create DataLoaders
+    ## Create the TensorDatasets
+    train_data = TensorDataset(torch.from_numpy(train_x), torch.from_numpy(train_y))
+    valid_data = TensorDataset(torch.from_numpy(val_x), torch.from_numpy(val_y))
+    test_data = TensorDataset(torch.from_numpy(test_x), torch.from_numpy(test_y))
+
+    ## DataLoaders
+    bs = FLAGS.batch_size
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=bs)
+    valid_loader = DataLoader(valid_data, shuffle=True, batch_size=bs)
+    test_loader = DataLoader(valid_data, shuffle=False, batch_size=bs)
 
 
 def preprocess(reviews, labels, seq_length):
