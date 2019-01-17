@@ -1,5 +1,3 @@
-
-
 def test(net, test_loader, criterion, optimizer):
     # To keep all the losses
     test_losses = []
@@ -81,4 +79,3 @@ def predict(net, test_review, seq_length=200):
         print ('The sentiment is positive')
     else:
         print ('The sentiment is negetive')
-        
