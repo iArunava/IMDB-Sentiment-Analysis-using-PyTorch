@@ -1,6 +1,7 @@
 from string import punctuation
 from collections import Counter
 from torch.utils.data import TensorDataset, DataLoader
+from SentimentRNN import SentimentRNN
 
 def train(FLAGS):
     # download the files if needed
@@ -51,6 +52,90 @@ def train(FLAGS):
     train_loader = DataLoader(train_data, shuffle=True, batch_size=bs)
     valid_loader = DataLoader(valid_data, shuffle=True, batch_size=bs)
     test_loader = DataLoader(valid_data, shuffle=False, batch_size=bs)
+
+    # Set the hyperparamters
+    vocab_size = len(vocab_to_int) + 1
+    output_size = 1
+    embedding_dim = FLAGS.embedding_dim
+    hidden_dim = FLAGS.hidden_dim
+    n_layers = FLAGS.n_layers
+    lr = FLAGS.learning_rate
+    epochs = FLAGS.epochs
+    counter = 0
+    print_every = FLAGS.print_every
+    clip = FLAGS.clip
+
+    # Instantiate the network
+    net = SentimentRNN(vocab_size, embedding_dim, hidden_dim, n_layers)
+
+    # Setup loss and optimizer
+    criterion = nn.BCELoss()
+    optimizer = torch.optim.Adam(net.parameters(), lr=lr)
+
+    ### Training Process ###
+
+    # Move the model to cuda if is_available
+    if (net.train_on_gpu):
+        net.cuda()
+
+    # Since we are Training
+    net.train()
+
+    for e in range(epochs):
+        # Initialize the hidden state
+        h = net.init_hidden(batch_size)
+
+        # batch loop
+        for inputs, labels in train_loader:
+            counter += 1
+
+            # Moving the inputs and labels to cuda
+            if (net.train_on_gpu):
+                inputs, labels = inputs.cuda(), labels.cuda()
+
+
+            # Creating new variables for the hidden state
+            h = tuple([each.data for each in h])
+
+            # zero accumulated gradients
+            net.zero_grad()
+
+            # Get the output
+            output, h = net(inputs, h)
+
+            # Calculate the loss and perform backprop
+            loss = criterion(output.squeeze(), labels.float())
+            loss.backward()
+
+            # Clip the gradients
+            nn.utils.clip_grad_norm_(net.parameters(), clip)
+            optimizer.step()
+
+            # Loss stats
+            if counter % print_every == 0:
+                # Get validation loss
+                val_h = net.init_hidden(batch_size)
+                val_losses = []
+                net.eval()
+                for inputs, labels in valid_loader:
+
+                    val_h = tuple([each.data for each in val_h])
+
+                    if (net.train_on_gpu):
+                        inputs, labels = inputs.cuda(), labels.cuda()
+
+                    output, val_h = net(inputs, val_h)
+                    val_loss = criterion(output.squeeze(), labels.float())
+
+                    val_losses.append(val_loss.item())
+
+                net.train()
+
+                print ("Epoch: {}/{}...".format(e+1, epochs),
+                        "Step: {}/{}...".format(counter),
+                        "Loss: {}/{}...".format(loss.item()),
+                        "Val_Loss: {}/{}".format(np.mean(val_losses)))
+
 
 
 def preprocess(reviews, labels, seq_length):
