@@ -22,9 +22,27 @@ def train(FLAGS):
     print ('[INFO]Dataset read!')
 
     # preprocess data
-    preprocess(reviews, labels)
+    features = preprocess(reviews, labels, FLAGS.seq_length)
 
-def preprocess(reviews, labels):
+    # Split the data
+    # Get the split fraction
+    split_frac = FLAGS.split_frac
+
+    # Get the data for training set
+    tr_idx = int(len(features) * split_frac)
+    train_x, train_y = features[: tr_idx], np.array(encoded_labels[: tr_idx])
+
+    # Get the data for validation set
+    va_idx = tr_idx + int(len(features[tr_idx : ]) * 0.5)
+    val_x, val_y = features[tr_idx : va_idx], np.array(encoded_labels[tr_idx : va_idx])
+
+    # Get the test data
+    test_x, test_y = features[va_idx : ], np.array(encoded_labels[va_idx : ])
+
+    # Create DataLoaders
+
+
+def preprocess(reviews, labels, seq_length):
     # Making all the characters lowercase to ease for model understanding
     reviews = reviews.lower()
 
@@ -67,4 +85,24 @@ def preprocess(reviews, labels):
     encoded_labels = [encoded_labels[ii] for ii in non_zero_idx]
 
     print ('[INFO]Number of reviews left after removing 0 length reviews {}'.format(len(non_zero_idx)))
-    
+
+    # Pad the features
+    features = pad_features(reviews_ints, seq_length)
+
+    # A few tests to make life easy
+    assert len(features) == len(reviews_ints)
+    assert len(features[0]) == seq_length
+
+    return features, encoded_labels
+
+
+def pad_features(reviews_ints, seq_length):
+    """
+    Return features of reviews_ints, where each review is padded with 0s or truncated
+    to the input seq_length
+    """
+    features = np.zeros((len(reviews_ints), seq_length), dtype=int)
+    for ii, rint in enumerate(reviews_ints):
+        features[ii, -len(rint) : ] = rint[: seq_length]
+
+    return features
