@@ -2,6 +2,7 @@ from string import punctuation
 from collections import Counter
 from torch.utils.data import TensorDataset, DataLoader
 from SentimentRNN import SentimentRNN
+from test import test
 
 def train(FLAGS):
     # download the files if needed
@@ -137,6 +138,9 @@ def train(FLAGS):
                         "Val_Loss: {}/{}".format(np.mean(val_losses)))
 
 
+    test(net)
+
+
 
 def preprocess(reviews, labels, seq_length):
     # Making all the characters lowercase to ease for model understanding
@@ -202,3 +206,11 @@ def pad_features(reviews_ints, seq_length):
         features[ii, -len(rint) : ] = rint[: seq_length]
 
     return features
+
+def save_model(net, model_name='SentimentRNNmodel', extra='1'):
+    checkpoint = {
+        'epoch' : 4,
+        'state_dict': net.state_dict()
+    }
+    torch.save(checkpoint, model_name + str(extra) + '.pth')
+    print ('Model saved successfully!')
