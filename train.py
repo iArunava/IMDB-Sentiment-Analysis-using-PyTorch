@@ -1,3 +1,8 @@
+import os
+import subprocess
+import numpy as np
+import torch
+import torch.nn as nn
 from string import punctuation
 from collections import Counter
 from torch.utils.data import TensorDataset, DataLoader
@@ -7,8 +12,8 @@ from test import test
 def train(FLAGS):
     # download the files if needed
     print ('[INFO]Checking if the data is present...')
-    if os.path.exists(FLAGS.dataset + 'labels.txt') and
-        os.path.exists(FLAGS.dataset + 'reviews.txt'):
+    if not os.path.exists(FLAGS.dataset + 'labels.txt') or \
+        not os.path.exists(FLAGS.dataset + 'reviews.txt'):
         print ('[INFO]Files not found!')
         print ('[INFO]Starting to download files...')
         subprocess.call(['./dataset/download.sh'])
@@ -23,11 +28,15 @@ def train(FLAGS):
     with open(FLAGS.dataset + 'labels.txt', 'r') as f:
         labels = f.read()
     print ('[INFO]Dataset read!')
-
+    
+    print ('[INFO]Starting to preprocess the data...')
     # preprocess data
-    features = preprocess(reviews, labels, FLAGS.seq_length)
-
+    features, encoded_labels, vocab_to_int = preprocess(reviews, labels, FLAGS.seq_length)
+    print ('[INFO]Preprocessing data complete')
+    
+    
     # Split the data
+    print ('[INFO]Splitting the Dataset into Train, Validation and Test set')
     # Get the split fraction
     split_frac = FLAGS.split_frac
 
@@ -41,20 +50,25 @@ def train(FLAGS):
 
     # Get the test data
     test_x, test_y = features[va_idx : ], np.array(encoded_labels[va_idx : ])
+    print ('[INFO]Splitting the dataset complete!')
 
     # Create DataLoaders
+    print ('[INFO]Creating DataLoaders from each train, val and test dataset')
     ## Create the TensorDatasets
     train_data = TensorDataset(torch.from_numpy(train_x), torch.from_numpy(train_y))
     valid_data = TensorDataset(torch.from_numpy(val_x), torch.from_numpy(val_y))
     test_data = TensorDataset(torch.from_numpy(test_x), torch.from_numpy(test_y))
 
     ## DataLoaders
-    bs = FLAGS.batch_size
-    train_loader = DataLoader(train_data, shuffle=True, batch_size=bs)
-    valid_loader = DataLoader(valid_data, shuffle=True, batch_size=bs)
-    test_loader = DataLoader(valid_data, shuffle=False, batch_size=bs)
+    batch_size = FLAGS.batch_size
+    train_loader = DataLoader(train_data, shuffle=True, batch_size=batch_size)
+    valid_loader = DataLoader(valid_data, shuffle=True, batch_size=batch_size)
+    test_loader = DataLoader(valid_data, shuffle=False, batch_size=batch_size)
+    
+    print ('[INFO]Creating DataLoaders Complete!')
 
     # Set the hyperparamters
+    print ('[INFO]Setting Hyperparameters...')
     vocab_size = len(vocab_to_int) + 1
     output_size = 1
     embedding_dim = FLAGS.embedding_dim
@@ -65,15 +79,21 @@ def train(FLAGS):
     counter = 0
     print_every = FLAGS.print_every
     clip = FLAGS.clip
-
+    print ('[INFO]Hyperparameters set successfully!')
+    
     # Instantiate the network
+    print ('[INFO] Instatiating the network')
     net = SentimentRNN(vocab_size, embedding_dim, hidden_dim, n_layers)
+    print (net)
+    print ('[INFO]Model Instantiated!')
 
     # Setup loss and optimizer
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
+    print ('[INFO]Loss and Optimizer set!')
 
     ### Training Process ###
+    print ('[INFO] Starting Training...')
 
     # Move the model to cuda if is_available
     if (net.train_on_gpu):
@@ -138,7 +158,11 @@ def train(FLAGS):
                         "Val_Loss: {}/{}".format(np.mean(val_losses)))
 
 
-    test(net)
+    print ('[INFO]Training Process Complete!')
+
+    print ('[INFO]Starting Testing process...')
+    test(net, test_loader, criterion, optimizer)
+    print ('[INFO]Testing process complete!')
 
 
 
@@ -193,7 +217,7 @@ def preprocess(reviews, labels, seq_length):
     assert len(features) == len(reviews_ints)
     assert len(features[0]) == seq_length
 
-    return features, encoded_labels
+    return features, encoded_labels, vocab_to_int
 
 
 def pad_features(reviews_ints, seq_length):

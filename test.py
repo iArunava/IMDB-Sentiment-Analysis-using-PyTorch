@@ -1,3 +1,5 @@
+from SentimentRNN import SentimentRNN
+
 def test(net, test_loader, criterion, optimizer):
     # To keep all the losses
     test_losses = []
@@ -79,3 +81,9 @@ def predict(net, test_review, seq_length=200):
         print ('The sentiment is positive')
     else:
         print ('The sentiment is negetive')
+
+def load_model(path):
+     net = torch.load(path)
+     net.eval()
+     return net
+

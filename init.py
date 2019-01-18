@@ -10,7 +10,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-d', '--dataset',
         type=str,
-        default='./dataset/'
+        default='./dataset/',
         help='The path to the dataset directory')
 
     parser.add_argument('-t', '--train',
@@ -44,7 +44,7 @@ if __name__ == '__main__':
 
     parser.add_argument('-e', '--epochs',
         type=int,
-        default=5,
+        default=4,
         help='The number of epochs')
 
     parser.add_argument('-pe', '--print-every',
@@ -52,6 +52,21 @@ if __name__ == '__main__':
         default=500,
         help='The interval after which the loss and accuracy stats are to be \
                 printed during the training')
+
+    parser.add_argument('-sl', '--seq-length',
+        type=int,
+        default=200,
+        help='The sequence length up to which each review is to be padded')
+
+    parser.add_argument('-sf', '--split-frac',
+        type=int,
+        default=0.8,
+        help='The fraction for the training set')
+
+    parser.add_argument('-bs', '--batch-size',
+        type=int,
+        default=16,
+        help='The batch size')
 
     parser.add_argument('-c', '--clip',
         type=float,
@@ -69,4 +84,6 @@ if __name__ == '__main__':
         net = load_model(model_path)
         predict(net, FLAGS.review)
     else:
-        train()
+        train(FLAGS)
+
+    print ('[INFO]Exiting...')

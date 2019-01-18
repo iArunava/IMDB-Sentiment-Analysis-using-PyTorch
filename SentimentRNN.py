@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-class SentimentRNN(nn.module):
-    def __init__(self, vocab_size, output_size, embedding_dim, hidden_dim, n_layers, drop_prob=0.5):
+class SentimentRNN(nn.Module):
+    def __init__(self, vocab_size, embedding_dim, hidden_dim, n_layers, output_size=1, drop_prob=0.5):
         """
         Initialize the model by setting up the layers
         """
@@ -30,14 +30,14 @@ class SentimentRNN(nn.module):
 
         x = self.embedding(x)
         x, hidden = self.lstm(x, hidden)
-        x = x.contiguos().view(-1, self.hidden_dim)
+        x = x.contiguous().view(-1, self.hidden_dim)
 
         out = self.dropout(x)
         out = self.fc(out)
         out_sig = self.sigmoid(out)
 
-        out_sig = out.view(batch_size, -1)
-        sig_out = out[:, -1]
+        out_sig = out_sig.view(batch_size, -1)
+        sig_out = out_sig[:, -1]
 
         # Return last sigmoid output and hidden state
         return sig_out, hidden
