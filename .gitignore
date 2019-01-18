@@ -1,3 +1,5 @@
+models/
+*.swp
 *.txt
 
 # Byte-compiled / optimized / DLL files
