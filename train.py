@@ -131,6 +131,8 @@ def train(FLAGS):
             # Clip the gradients
             nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
+            
+            print ('.', end='')
 
             # Loss stats
             if counter % print_every == 0:
@@ -157,7 +159,8 @@ def train(FLAGS):
                         "Loss: {}/{}...".format(loss.item()),
                         "Val_Loss: {}/{}".format(np.mean(val_losses)))
 
-
+    
+    print ()
     print ('[INFO]Training Process Complete!')
 
     print ('[INFO]Starting Testing process...')
