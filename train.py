@@ -92,6 +92,7 @@ def train(FLAGS):
     optimizer = torch.optim.Adam(net.parameters(), lr=lr)
     print ('[INFO]Loss and Optimizer set!')
 
+    test(net, test_loader, criterion, optimizer, batch_size)
     ### Training Process ###
     print ('[INFO] Starting Training...')
 
@@ -153,7 +154,8 @@ def train(FLAGS):
                     val_losses.append(val_loss.item())
 
                 net.train()
-
+                
+                print ()
                 print ("Epoch: {}/{}...".format(e+1, epochs),
                         "Step: {}...".format(counter),
                         "Loss: {:6f}...".format(loss.item()),
@@ -164,7 +166,7 @@ def train(FLAGS):
     print ('[INFO]Training Process Complete!')
 
     print ('[INFO]Starting Testing process...')
-    test(net, test_loader, criterion, optimizer)
+    test(net, test_loader, criterion, optimizer, batch_size)
     print ('[INFO]Testing process complete!')
 
 

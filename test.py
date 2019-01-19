@@ -1,6 +1,9 @@
+import torch
+import torch.nn as nn
+import numpy as np
 from SentimentRNN import SentimentRNN
 
-def test(net, test_loader, criterion, optimizer):
+def test(net, test_loader, criterion, optimizer, batch_size):
     # To keep all the losses
     test_losses = []
     # To keep a count of the correct predictions
@@ -33,7 +36,7 @@ def test(net, test_loader, criterion, optimizer):
 
         # compare predictions to true label
         correct_tensor = pred.eq(labels.float().view_as(pred))
-        if not self.train_on_gpu:
+        if not net.train_on_gpu:
             correct = np.squeeze(correct_tensor.numpy())
         else:
             correct = np.squeeze(correct_tensor.cpu().numpy())
