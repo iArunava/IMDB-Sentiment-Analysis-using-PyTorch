@@ -156,8 +156,8 @@ def train(FLAGS):
 
                 print ("Epoch: {}/{}...".format(e+1, epochs),
                         "Step: {}...".format(counter),
-                        "Loss: {}/{}...".format(loss.item()),
-                        "Val_Loss: {}/{}".format(np.mean(val_losses)))
+                        "Loss: {:6f}...".format(loss.item()),
+                        "Val_Loss: {:6f}".format(np.mean(val_losses)))
 
     
     print ()
